@@ -1,35 +1,48 @@
-#include <SFML/Graphics.hpp>
+
 #include <iostream>
+#include "Vecteur2D.hpp"
+#include "Objets.hpp"
+#include "Physique.hpp"
 
-int main() {
-    // SFML 3 utilise des accolades {} pour définir la taille de la fenêtre
-    sf::RenderWindow window(sf::VideoMode({800, 600}), "Subbuteo Test - SFML 3");
- 
-    // Création d'un cercle pour représenter un joueur ou la balle
-    sf::CircleShape player(30.f);
-    player.setFillColor(sf::Color::Red);
-    player.setOrigin({30.f, 30.f}); // Centre du cercle
-    player.setPosition({400.f, 300.f}); // Milieu de l'écran
+int main(){
 
-    std::cout << "Fenetre ouverte avec succes !" << std::endl;
+    Objet obj1(0,0,2,0,1,1);
+    Objet obj2(8,1,0,0,1,1);
 
-    // Boucle de jeu (Game Loop)
-    while (window.isOpen()) {
-        // Gestion des événements (clic, fermeture, etc.)
-        while (const std::optional event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>()) {
-                window.close();
-            }
+    Physique physique;
+
+    double dt = 0.1;
+
+    for(int i=0;i<10;i++){
+
+        std::cout<<"Iteration "<<i<<std::endl;
+
+        obj1.deplacer(dt);
+        obj2.deplacer(dt);
+
+        physique.frottement(obj1,0.0);
+        physique.frottement(obj2,0.0);
+
+        if(physique.collision(obj1,obj2)){
+
+            std::cout<<"Collision detectee"<<std::endl;
+
+            physique.gerer_collision(obj1,obj2);
         }
 
-        // 1. On efface l'écran (fond vert pour le terrain)
-        window.clear(sf::Color(50, 150, 50));
+        std::cout<<"Obj1 position ";
+        obj1.afficher_position();
 
-        // 2. On dessine les objets
-        window.draw(player);
+        std::cout<<"Obj1 vitesse ";
+        obj1.afficher_vitesse();
 
-        // 3. On affiche le tout
-        window.display();
+        std::cout<<"Obj2 position ";
+        obj2.afficher_position();
+
+        std::cout<<"Obj2 vitesse ";
+        obj2.afficher_vitesse();
+
+        std::cout<<"----------------"<<std::endl;
     }
 
     return 0;
