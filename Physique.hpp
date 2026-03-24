@@ -68,7 +68,7 @@ public:
         }
     }
 
-    void gerer_collision(Objet& o1, Objet& o2, double restitution = 1.0) {
+    void gerer_collision(Objet& o1, Objet& o2, double restitution) {
         if (!collision(o1, o2)) return;
 
         corriger_penetration(o1, o2);
