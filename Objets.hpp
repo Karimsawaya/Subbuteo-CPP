@@ -5,22 +5,27 @@
 #include <iostream>
 
 class Objet{
-public:
+    public:
 
     Vecteur2D position;
     Vecteur2D vitesse;
+    Vecteur2D acceleration;
     double masse;
     double rayon;
 
-    Objet() : position(0,0), vitesse(0,0), masse(1), rayon(1) {}
+    Objet() : position(0,0), vitesse(0,0), acceleration(0,0), masse(1), rayon(1) {}
 
     Objet(double x, double y, double vx, double vy, double m, double r)
-        : position(x,y), vitesse(vx,vy), masse(m), rayon(r) {}
+        : position(x,y), vitesse(vx,vy), acceleration(0,0), masse(m), rayon(r) {}
 
-    void deplacer(double dt){
-        Vecteur2D dep = vitesse.multiplier_scalaire(dt);
-        position = position.addition_vecteur(dep);
-    }
+    void deplacer(double dt, Vecteur2D acceleration = Vecteur2D(0,0)) {
+    // 1. Mise à jour de la vitesse d'abord (Semi-Implicite)
+    // On ajoute l'accélération (poussée ou friction) au vecteur vitesse
+    vitesse += acceleration * dt;
+
+    // 2. Mise à jour de la position avec la NOUVELLE vitesse
+    position += vitesse * dt;
+}
 
     void afficher_position() const{
         position.afficher();

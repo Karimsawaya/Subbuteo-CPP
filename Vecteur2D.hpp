@@ -6,10 +6,11 @@
 
 class Vecteur2D{
 
-public:
+    public:
 
     double x;
     double y;
+
 
     Vecteur2D(){
         x = 0;
@@ -19,6 +20,16 @@ public:
     Vecteur2D(double x_, double y_){
         x = x_;
         y = y_;
+    }
+
+    Vecteur2D& operator +=(const Vecteur2D& v){
+        x += v.x;
+        y += v.y;
+        return *this;
+    }
+
+    Vecteur2D operator*(double k) const{
+        return Vecteur2D(x * k, y * k);
     }
 
     Vecteur2D addition_vecteur(const Vecteur2D& v2) const{
