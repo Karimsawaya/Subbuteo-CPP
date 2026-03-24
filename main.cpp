@@ -1,49 +1,140 @@
-
-#include <iostream>
-#include "Vecteur2D.hpp"
+#include <SFML/Graphics.hpp>
 #include "Objets.hpp"
 #include "Physique.hpp"
+#include <optional>
+#include <vector>
 
-int main(){
+int main() {
+    float scale = 40.f; 
+    sf::RenderWindow window(sf::VideoMode({800, 400}), "Subuteo");
+    window.setFramerateLimit(60);
 
-    Objet obj1(0,0,2,0,1,1);
-    Objet obj2(8,1,0,0,1,1);
+    Terrain terrain;
+    Physique moteur;
+    
+    // Pointeur pour suivre quel joueur on est en train de "charger"
+    Joueur* joueurSelectionne = nullptr;
+    sf::Vertex line[2]; // Pour dessiner la ligne de visée
 
-    Physique physique;
+    // Configuration graphique de la balle
+    sf::CircleShape formeBalle(terrain.balle.rayon * scale);
+    formeBalle.setFillColor(sf::Color::White);
+    formeBalle.setOrigin({(float)terrain.balle.rayon * scale, (float)terrain.balle.rayon * scale});
 
-    double dt = 0.1;
+    // Configuration graphique des joueurs
+    sf::CircleShape formeJoueur(terrain.rouges[0].rayon * scale);
+    formeJoueur.setOrigin({(float)terrain.rouges[0].rayon * scale, (float)terrain.rouges[0].rayon * scale});
+    formeJoueur.setOutlineThickness(2);
 
-    for(int i=0;i<10;i++){
+    while (window.isOpen()) {
+        // --- 1. GESTION DES ÉVÉNEMENTS ---
+        while (const std::optional event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>()) {
+                window.close();
+            }
 
-        std::cout<<"Iteration "<<i<<std::endl;
+            // Clic Souris : Sélectionner un joueur
+            if (auto* mouseEvent = event->getIf<sf::Event::MouseButtonPressed>()) {
+                if (mouseEvent->button == sf::Mouse::Button::Left) {
+                    sf::Vector2f mousePos = window.mapPixelToCoords(mouseEvent->position);
+                    
+                    // On cherche si on a cliqué sur un joueur rouge
+                    for (int i = 0; i < 5; i++) {
+                        Vecteur2D p = terrain.rouges[i].position * scale;
+                        float dx = p.x - mousePos.x;
+                        float dy = p.y - mousePos.y;
+                        if (std::sqrt(dx*dx + dy*dy) < terrain.rouges[0].rayon * scale) {
+                            joueurSelectionne = &terrain.rouges[i];
+                        }
+                    }
 
-        obj1.deplacer(dt);
-        obj2.deplacer(dt);
+                    // On cherche si on a cliqué sur un joueur bleu
+                    for (int i = 0; i < 5; i++) {
+                        Vecteur2D p = terrain.bleus[i].position * scale;
+                        float dx = p.x - mousePos.x;
+                        float dy = p.y - mousePos.y;
+                        if (std::sqrt(dx*dx + dy*dy) < terrain.bleus[0].rayon * scale) {
+                            joueurSelectionne = &terrain.bleus[i];
+                        }
+                    }
 
-        physique.frottement(obj1,0.0);
-        physique.frottement(obj2,0.0);
+                }
+            }
 
-        if(physique.collision(obj1,obj2)){
-
-            std::cout<<"Collision detectee"<<std::endl;
-
-            physique.gerer_collision(obj1,obj2);
+            // Relâcher Souris : Propulser le joueur
+            if (auto* mouseEvent = event->getIf<sf::Event::MouseButtonReleased>()) {
+                if (mouseEvent->button == sf::Mouse::Button::Left && joueurSelectionne) {
+                    sf::Vector2f mousePos = window.mapPixelToCoords(mouseEvent->position);
+                    
+                    // Calcul du vecteur de propulsion (Position Joueur - Position Souris)
+                    Vecteur2D posPhysique = joueurSelectionne->position;
+                    Vecteur2D mousePhysique(mousePos.x / scale, mousePos.y / scale);
+                    
+                    Vecteur2D force = posPhysique.soustraction_vecteur(mousePhysique);
+                    joueurSelectionne->vitesse = force.multiplier_scalaire(3.0); // Coefficient de puissance
+                    
+                    joueurSelectionne = nullptr; // On relâche la sélection
+                }
+            }
         }
 
-        std::cout<<"Obj1 position ";
-        obj1.afficher_position();
+        // --- 2. PHYSIQUE ---
+        double dt = 0.016; 
 
-        std::cout<<"Obj1 vitesse ";
-        obj1.afficher_vitesse();
+        // Déplacement et friction pour tous
+        auto mise_a_jour = [&](Objet& obj) {
+            obj.deplacer(dt);
+            moteur.frottement(obj, 0.8, dt); // Amortissement
+            moteur.gerer_murs(obj, terrain.largeur, terrain.hauteur, 0.7);
+        };
 
-        std::cout<<"Obj2 position ";
-        obj2.afficher_position();
+        mise_a_jour(terrain.balle);
+        for(int i=0; i<5; i++) {
+            mise_a_jour(terrain.rouges[i]);
+            mise_a_jour(terrain.bleus[i]);
+            
+            // Collisions Joueurs <-> Balle
+            moteur.gerer_collision(terrain.rouges[i], terrain.balle, 0.8);
+            moteur.gerer_collision(terrain.bleus[i], terrain.balle, 0.8);
 
-        std::cout<<"Obj2 vitesse ";
-        obj2.afficher_vitesse();
+            // Collisions Joueurs <-> Joueurs
+            for(int j=0; j<5; j++) {
+                moteur.gerer_collision(terrain.rouges[i], terrain.rouges[j], 0.8);
+                moteur.gerer_collision(terrain.bleus[i], terrain.bleus[j], 0.8);
+                moteur.gerer_collision(terrain.rouges[i], terrain.bleus[j], 0.8);
+                moteur.gerer_collision(terrain.bleus[i], terrain.rouges[j], 0.8);
+            }   
+        }
 
-        std::cout<<"----------------"<<std::endl;
+        // --- 3. RENDU ---
+        window.clear(sf::Color(34, 139, 34)); 
+
+        // Dessiner la ligne de visée si on sélectionne un joueur
+        if (joueurSelectionne) {
+            sf::Vector2f start = {(float)joueurSelectionne->position.x * scale, (float)joueurSelectionne->position.y * scale};
+            sf::Vector2f end = window.mapPixelToCoords(sf::Mouse::getPosition(window));
+            line[0] = sf::Vertex{.position = start, .color = sf::Color::Yellow};
+            line[1] = sf::Vertex{.position = end, .color = sf::Color(255, 255, 0, 128)}; // Semi-transparent yellow
+            window.draw(line, 2, sf::PrimitiveType::Lines);
+        }
+
+        // Dessiner la balle
+        formeBalle.setPosition({(float)terrain.balle.position.x * scale, (float)terrain.balle.position.y * scale});
+        window.draw(formeBalle);
+
+        // Dessiner les joueurs
+        for (int i = 0; i < 5; i++) {
+            // Rouges
+            formeJoueur.setFillColor(sf::Color::Red);
+            formeJoueur.setPosition({(float)terrain.rouges[i].position.x * scale, (float)terrain.rouges[i].position.y * scale});
+            window.draw(formeJoueur);
+            // Bleus
+            formeJoueur.setFillColor(sf::Color::Blue);
+            formeJoueur.setPosition({(float)terrain.bleus[i].position.x * scale, (float)terrain.bleus[i].position.y * scale});
+            window.draw(formeJoueur);
+        }
+
+        window.display();
     }
-
     return 0;
 }
