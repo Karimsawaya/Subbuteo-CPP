@@ -18,9 +18,37 @@ public:
 
     Jeu() : tourActuel(ROUGE), etat(GameState::ATTENTE_TIR), scoreRouge(0), scoreBleu(0) {}
 
+    void verifierBut() {
+        double x = terrain.balle.position.x;
+        double y = terrain.balle.position.y;
+
+    // Vérification du but à GAUCHE (But pour les Bleus)
+        if (x < Settings::BUT_PROFONDEUR) {
+        if (y > Settings::BUT_Y_HAUT && y < Settings::BUT_Y_BAS) {
+            scoreBleu++;
+            reinitialiser();
+        } else {
+            // Si elle sort mais pas dans le but, c'est juste un rebond ou une sortie
+            // On laisse gerer_murs faire son travail ou on remet en jeu
+        }
+        }
+
+    // Vérification du but à DROITE (But pour les Rouges)
+        if (x > terrain.largeur - Settings::BUT_PROFONDEUR) {
+            if (y > Settings::BUT_Y_HAUT && y < Settings::BUT_Y_BAS) {
+            scoreRouge++;
+            reinitialiser();
+        }
+    }
+}
+
     // Met à jour toute la physique
     void update() {
+
+        
         double dt = Settings::DT;
+
+        verifierBut();
 
         // 1. Déplacement et friction
         auto maj = [&](Objet& obj) {
@@ -28,6 +56,7 @@ public:
             moteur.frottement(obj, Settings::FRICTION, dt);
             moteur.gerer_murs(obj, terrain.largeur, terrain.hauteur, Settings::RESTITUTION);
         };
+
 
         maj(terrain.balle);
         for(int i=0; i<5; i++) {
@@ -54,7 +83,7 @@ public:
             etat = GameState::ATTENTE_TIR;
         }
 
-        verifierBut();
+
     }
 
     bool tousObjetsArretes() {
@@ -66,16 +95,6 @@ public:
         return true;
     }
 
-    void verifierBut() {
-        // Détection simplifiée sur les bords
-        if (terrain.balle.position.x < 0.1) {
-            scoreBleu++;
-            reinitialiser();
-        } else if (terrain.balle.position.x > terrain.largeur - 0.1) {
-            scoreRouge++;
-            reinitialiser();
-        }
-    }
 
     void changerTour() {
         tourActuel = (tourActuel == ROUGE) ? BLEU : ROUGE;
@@ -85,6 +104,9 @@ public:
         terrain = Terrain(); // On recharge un terrain neuf
         etat = GameState::ATTENTE_TIR;
     }
+
+
+
 };
 
 #endif

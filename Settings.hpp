@@ -4,6 +4,11 @@
 #include <SFML/Graphics.hpp>
 
 namespace Settings {
+
+    //Joeurs
+    const std::string Player1 = "Leo";
+    const std::string Player2 = "Karim";
+
     // --- Fenêtre et Rendu ---
     const int SCREEN_WIDTH = 800;
     const int SCREEN_HEIGHT = 400;
@@ -12,10 +17,10 @@ namespace Settings {
     const float DT = 1.0f / FPS;
 
     // --- Physique ---
-    const double FRICTION = 0.8;      // Amortissement des mouvements
+    const double FRICTION = 0.7;    //0.8  // Amortissement des mouvements
     const double RESTITUTION = 0.7;   // Rebond sur les murs/objets
-    const double PUISSANCE_TIR = 3.0; // Multiplicateur de force
-    const double SEUIL_ARRET = 0.4;  // Vitesse en dessous de laquelle l'objet s'arrête
+    const double PUISSANCE_TIR = 3; // 3.0. Multiplicateur de force
+    const double SEUIL_ARRET = 0.5;  // Vitesse en dessous de laquelle l'objet s'arrête
 
     // --- Couleurs ---
     const sf::Color COLOR_TERRAIN(34, 139, 34);
@@ -24,8 +29,12 @@ namespace Settings {
     const sf::Color COLOR_BLEU(0, 0, 200);
     const sf::Color COLOR_VISEE(255, 255, 0, 150); // Jaune semi-transparent
 
-    // --- Règles ---
-    const float LARGEUR_BUT = 2.5f; // En mètres
+    // -- BUT -- 
+
+    // Terrain : largeur=20m, hauteur=10m
+    const double BUT_Y_HAUT    = 3.8;  
+    const double BUT_Y_BAS     = 6.2;  
+    const double BUT_PROFONDEUR = 0.9; 
 }
 
 #endif

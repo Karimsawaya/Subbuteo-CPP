@@ -23,7 +23,7 @@ class Objet{
     // On ajoute l'accélération (poussée ou friction) au vecteur vitesse
     vitesse += acceleration * dt;
 
-    // 2. Mise à jour de la position avec la NOUVELLE vitesse
+    // 2. Mise à jour de la position avec la nouvelle vitesse
     position += vitesse * dt;
 }
 
@@ -42,6 +42,8 @@ public:
     Balle() : Objet(10,5,0,0,0.5,0.3){}
 };
 
+
+
 enum CouleurEquipe{
     ROUGE,
     BLEU
@@ -53,13 +55,13 @@ public:
     int id;
     CouleurEquipe equipe;
 
-    Joueur() : Objet(0,0,0,0,1,0.5){
+    Joueur() : Objet(0,0,0,0,1,0.5){//1, 0.5
         id = 0;
         equipe = ROUGE;
     }
 
     Joueur(double x, double y, int id_, CouleurEquipe eq)
-        : Objet(x,y,0,0,1,0.5){
+        : Objet(x,y,0,0,1,0.6){
 
         id = id_;
         equipe = eq;
@@ -104,7 +106,7 @@ public:
 
         for(int i=0;i<5;i++){
 
-            rouges[i] = Joueur(3, 2 + i*1.5, i, ROUGE);
+            rouges[i] = Joueur(3, 2 + i*1.5, i, ROUGE); 
             bleus[i] = Joueur(17, 2 + i*1.5, i, BLEU);
 
         }
